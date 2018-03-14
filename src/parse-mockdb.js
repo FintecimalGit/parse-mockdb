@@ -1,5 +1,6 @@
 const Parse = require('parse-shim');
 const _ = require('lodash');
+const moment = require('moment');
 global.Parse = Parse;
 
 const DEFAULT_LIMIT = 100;
@@ -723,12 +724,21 @@ function getChangedKeys(originalObject, updatedObject) {
   }, []);
 }
 
-function getDate(date = {}) {
-  if (typeof date !== 'object' || !date.iso) return null;
-  const {
-    iso
-  } = date;
-  return new Date(iso);
+function getDate(date) {
+  if(date && typeof date === 'object') {
+    if (date.iso) {
+      const { iso } = date;
+      return new Date(iso);
+    } else if (date.stringDate) {
+      const { format, stringDate } = date;
+      if (format) return moment(stringDate, format).toDate(); 
+      return moment(stringDate, 'DD/MM/YYYY HH:mm:ss').toDate();
+    }else if(date.timestamp) {
+      const timestamp = parseInt(date.timestamp);
+      return new Date(timestamp);
+    }
+  }
+  return null;   
 }
 
 /**
