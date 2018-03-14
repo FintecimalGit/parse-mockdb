@@ -15,10 +15,8 @@ Enhancements:
   To make specific test-scenarios somethimes is required to define custom createAt, updateAt or objectId, 
   so this fork is able to handle it. just add to the object the data to save:
 
-```js
-    created_at = createdAt
-    updated_at = updatedAt
-    object_id = objectId
+```
+    created_at, updated_at, object_id, objectId
 ```
   Dates can be defined as follow:
 ```js
