@@ -278,11 +278,16 @@ const SPECIAL_CLASS_NAMES = {
  * the where clause (recursively if nested)
  */
 function recursivelyMatch(className, where) {
-  debugPrint('MATCH', { className, where });
+  debugPrint('MATCH', {
+    className,
+    where
+  });
   const collection = getCollection(className);
   // eslint-disable-next-line no-use-before-define
   const matches = _.filter(_.values(collection), queryFilter(where));
-  debugPrint('MATCHES', { matches });
+  debugPrint('MATCHES', {
+    matches
+  });
   return _.cloneDeep(matches); // return copies instead of originals
 }
 
@@ -415,10 +420,9 @@ function evaluateObject(object, whereParams, key) {
       const param = deserializeQueryParam(value);
 
       // Constraint can take the form form of a query operator OR an equality match
-      if (constraint in QUERY_OPERATORS) {  // { age: {$lt: 30} }
+      if (constraint in QUERY_OPERATORS) { // { age: {$lt: 30} }
         return matches && QUERY_OPERATORS[constraint].apply(
-          null,
-          [keyValue, param, args]
+          null, [keyValue, param, args]
         );
       }
       // { age: 30 }
@@ -488,7 +492,9 @@ function handleBatchRequest(unused1, unused2, data) {
     const path = request.path;
     const body = request.body;
     return handleRequest(method, path, body)
-      .then(result => Parse.Promise.as({ success: result.response }));
+      .then(result => Parse.Promise.as({
+        success: result.response
+      }));
   });
 
   return Parse.Promise.when.apply(null, getResults).then(function theResults() {
@@ -508,8 +514,10 @@ function fetchObjectByPointer(pointer) {
     return undefined;
   }
 
-  return Object.assign(
-    { __type: 'Object', className: pointer.className },
+  return Object.assign({
+      __type: 'Object',
+      className: pointer.className
+    },
     _.cloneDeep(storedItem)
   );
 }
@@ -519,7 +527,10 @@ function fetchObjectByPointer(pointer) {
  * with fully fetched objects
  */
 function includePaths(object, pathsRemaining) {
-  debugPrint('INCLUDE', { object, pathsRemaining });
+  debugPrint('INCLUDE', {
+    object,
+    pathsRemaining
+  });
   const path = pathsRemaining.shift();
   const target = object && object[path];
 
@@ -622,7 +633,9 @@ function handleGetRequest(request) {
   }
 
   if (request.data.count) {
-    return Parse.Promise.as(respond(200, { count: matches.length }));
+    return Parse.Promise.as(respond(200, {
+      count: matches.length
+    }));
   }
 
   matches = queryMatchesAfterIncluding(matches, data.include);
@@ -648,7 +661,9 @@ function handleGetRequest(request) {
   const limit = data.limit || DEFAULT_LIMIT;
   const startIndex = data.skip || 0;
   const endIndex = startIndex + limit;
-  const response = { results: matches.slice(startIndex, endIndex) };
+  const response = {
+    results: matches.slice(startIndex, endIndex)
+  };
 
   // Add the class name for the outgoing objects to the response if sepcified
   if (matchesClassName.length > 0) {
@@ -671,14 +686,18 @@ function handleGetRequest(request) {
 function runHook(className, hookType, data) {
   let hook = getHook(className, hookType);
   if (hook) {
-    const modelData = Object.assign({}, data, { className });
+    const modelData = Object.assign({}, data, {
+      className
+    });
     const model = Parse.Object.fromJSON(modelData);
     hook = hook.bind(model);
 
     // TODO Stub out Parse.Cloud.useMasterKey() so that we can report the correct 'master'
     // value here.
     return hook(makeRequestObject(model, false)).done((beforeSaveOverrideValue) => {
-      debugPrint('HOOK', { beforeSaveOverrideValue });
+      debugPrint('HOOK', {
+        beforeSaveOverrideValue
+      });
 
       // Unlike BeforeDeleteResponse, BeforeSaveResponse might specify
       let objectToProceedWith = model;
@@ -706,7 +725,9 @@ function getChangedKeys(originalObject, updatedObject) {
 
 function getDate(date = {}) {
   if (typeof date !== 'object' || !date.iso) return null;
-  const { iso } = date;
+  const {
+    iso
+  } = date;
   return new Date(iso);
 }
 
@@ -722,10 +743,14 @@ function handlePostRequest(request) {
   return runHook(className, 'beforeSave', request.data).then(result => {
     const changedKeys = getChangedKeys(request.data, result);
 
-    const {created_at, updated_at, objectId  } = request.data;
+    const {
+      created_at,
+      updated_at,
+      object_id
+    } = request.data;
 
-    const newId = objectId || _.uniqueId();
-    
+    const newId = object_id || _.uniqueId();
+
     // Some test would need to define createdAt or updatedAt as specific date..
 
     const createdAt = getDate(created_at) || new Date();
@@ -733,12 +758,16 @@ function handlePostRequest(request) {
 
     delete request.data.created_at;
     delete request.data.updated_at;
+    delete request.data.object_id;
 
     const ops = extractOps(result);
 
     const newObject = Object.assign(
-      result,
-      { createdAt, updatedAt, objectId: newId }
+      result, {
+        createdAt,
+        updatedAt,
+        objectId: newId
+      }
     );
 
     applyOps(newObject, ops, className);
@@ -748,8 +777,10 @@ function handlePostRequest(request) {
     collection[newId] = newObject;
 
     response = Object.assign(
-      _.cloneDeep(_.omit(_.pick(result, toPick), toOmit)),
-      { objectId: newId, createdAt: result.createdAt.toJSON() }
+      _.cloneDeep(_.omit(_.pick(result, toPick), toOmit)), {
+        objectId: newId,
+        createdAt: result.createdAt.toJSON()
+      }
     );
 
     return Parse.Promise.as(respond(201, response));
@@ -757,6 +788,7 @@ function handlePostRequest(request) {
 }
 
 function handlePutRequest(request) {
+
   const className = request.className;
   const collection = getCollection(className);
   const objId = request.objectId;
@@ -775,8 +807,9 @@ function handlePutRequest(request) {
 
   const updatedObject = Object.assign(
     _.cloneDeep(currentObject),
-    data,
-    { updatedAt: now }
+    data, {
+      updatedAt: now
+    }
   );
 
   applyOps(updatedObject, ops, className);
@@ -788,8 +821,9 @@ function handlePutRequest(request) {
 
     collection[request.objectId] = updatedObject;
     response = Object.assign(
-      _.cloneDeep(_.omit(_.pick(result, Object.keys(ops).concat(changedKeys)), toOmit)),
-      { updatedAt: now }
+      _.cloneDeep(_.omit(_.pick(result, Object.keys(ops).concat(changedKeys)), toOmit)), {
+        updatedAt: now
+      }
     );
     return Parse.Promise.as(respond(200, response));
   }).then(result => runHook(className, 'afterSave', response).then(() => result));
@@ -825,10 +859,20 @@ const MockRESTController = {
   request: (method, path, data, options) => {
     let result;
     if (path === 'batch') {
-      debugPrint('BATCH', { method, path, data, options });
+      debugPrint('BATCH', {
+        method,
+        path,
+        data,
+        options
+      });
       result = handleBatchRequest(method, path, data);
     } else {
-      debugPrint('REQUEST', { method, path, data, options });
+      debugPrint('REQUEST', {
+        method,
+        path,
+        data,
+        options
+      });
       result = handleRequest(method, path, data);
     }
 
