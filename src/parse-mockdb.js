@@ -722,12 +722,14 @@ function handlePostRequest(request) {
   return runHook(className, 'beforeSave', request.data).then(result => {
     const changedKeys = getChangedKeys(request.data, result);
 
-    const newId = _.uniqueId();
+    const {created_at, updated_at, objectId  } = request.data;
+
+    const newId = objectId || _.uniqueId();
     
     // Some test would need to define createdAt or updatedAt as specific date..
 
-    const createdAt = getDate(request.data.created_at) || new Date();
-    const updatedAt = getDate(request.data.updated_at) || new Date();
+    const createdAt = getDate(created_at) || new Date();
+    const updatedAt = getDate(updated_at) || new Date();
 
     delete request.data.created_at;
     delete request.data.updated_at;
