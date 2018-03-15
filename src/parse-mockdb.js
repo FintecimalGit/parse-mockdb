@@ -725,20 +725,20 @@ function getChangedKeys(originalObject, updatedObject) {
 }
 
 function getDate(date) {
-  if(date && typeof date === 'object') {
+  if (date && typeof date === 'object') {
     if (date.iso) {
       const { iso } = date;
       return new Date(iso);
     } else if (date.stringDate) {
       const { format, stringDate } = date;
-      if (format) return moment(stringDate, format).toDate(); 
+      if (format) return moment(stringDate, format).toDate();
       return moment(stringDate, 'DD/MM/YYYY HH:mm:ss').toDate();
-    }else if(date.timestamp) {
-      const timestamp = parseInt(date.timestamp);
+    } else if(date.timestamp) {
+      const timestamp = parseInt(date.timestamp, 10);
       return new Date(timestamp);
     }
   }
-  return null;   
+  return null;
 }
 
 /**
@@ -753,11 +753,7 @@ function handlePostRequest(request) {
   return runHook(className, 'beforeSave', request.data).then(result => {
     const changedKeys = getChangedKeys(request.data, result);
 
-    const {
-      created_at,
-      updated_at,
-      object_id
-    } = request.data;
+    const { created_at, updated_at, object_id } = request.data;
 
     const newId = object_id || _.uniqueId();
 
@@ -776,7 +772,7 @@ function handlePostRequest(request) {
       result, {
         createdAt,
         updatedAt,
-        objectId: newId
+        objectId: newId,
       }
     );
 
@@ -920,12 +916,37 @@ function unMockDB() {
   }
 }
 
+
+function setParseData(collection, data) {
+  if (_.isArray(data)) {
+    const objectArray = data.map((documment) => {
+      const object = new Parse.Object(collection);
+      object.set(documment);
+      return object;
+    });
+    return Parse.Object.saveAll(objectArray);
+  }
+  const object = (new Parse.Object(collection)).set(data);
+  return object.save();
+}
+
+function createDataBase(schemma) {
+  const promiseArray = [];
+  Object.keys(schemma).forEach((collection) => {
+    promiseArray.push(setParseData(collection, schemma[collection]));
+  });
+  return Promise.all(promiseArray);
+}
+
+
 Parse.MockDB = {
   mockDB,
-  unMockDB,
   cleanUp,
-  promiseResultSync,
+  unMockDB,
   registerHook,
+  setParseData,
+  createDataBase,
+  promiseResultSync,
 };
 
 module.exports = Parse.MockDB;
