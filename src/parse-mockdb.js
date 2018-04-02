@@ -1,6 +1,8 @@
 const Parse = require('parse-shim');
 const _ = require('lodash');
 const moment = require('moment');
+const Request = require('request');
+
 global.Parse = Parse;
 
 const DEFAULT_LIMIT = 100;
@@ -19,6 +21,24 @@ let outOfBandResults = null;
 
 let defaultController = null;
 let mocked = false;
+
+function defineHttpRequest() {
+  Parse.Cloud.httpRequest = (method, url) => {
+    return new Promise((resolve) => {
+      Request
+        .get({
+          url,
+          encoding: 'utf-8',
+          method: 'GET',
+        }, (err, res, body) => {
+          resolve({ data: JSON.parse(body) });
+        })
+        .on('error', (err) => {
+          throw err;
+        });
+    });
+  };
+}
 
 function debugPrint(prefix, object) {
   if (CONFIG.DEBUG) {
@@ -281,13 +301,13 @@ const SPECIAL_CLASS_NAMES = {
 function recursivelyMatch(className, where) {
   debugPrint('MATCH', {
     className,
-    where
+    where,
   });
   const collection = getCollection(className);
   // eslint-disable-next-line no-use-before-define
   const matches = _.filter(_.values(collection), queryFilter(where));
   debugPrint('MATCHES', {
-    matches
+    matches,
   });
   return _.cloneDeep(matches); // return copies instead of originals
 }
@@ -733,7 +753,7 @@ function getDate(date) {
       const { format, stringDate } = date;
       if (format) return moment(stringDate, format).toDate();
       return moment(stringDate, 'DD/MM/YYYY HH:mm:ss').toDate();
-    } else if(date.timestamp) {
+    } else if (date.timestamp) {
       const timestamp = parseInt(date.timestamp, 10);
       return new Date(timestamp);
     }
@@ -869,7 +889,7 @@ const MockRESTController = {
         method,
         path,
         data,
-        options
+        options,
       });
       result = handleBatchRequest(method, path, data);
     } else {
@@ -877,7 +897,7 @@ const MockRESTController = {
         method,
         path,
         data,
-        options
+        options,
       });
       result = handleRequest(method, path, data);
     }
@@ -939,6 +959,8 @@ function createDataBase(schemma) {
 }
 
 
+defineHttpRequest();
+
 Parse.MockDB = {
   mockDB,
   cleanUp,
@@ -947,6 +969,7 @@ Parse.MockDB = {
   setParseData,
   createDataBase,
   promiseResultSync,
+  defineHttpRequest,
 };
 
 module.exports = Parse.MockDB;
