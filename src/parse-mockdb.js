@@ -23,13 +23,15 @@ let defaultController = null;
 let mocked = false;
 
 function defineHttpRequest() {
-  Parse.Cloud.httpRequest = (method, url) => {
+  Parse.Cloud.httpRequest = ({ method, url }) => {
+
+    const action = method.toLowerCase();
+
     return new Promise((resolve) => {
-      Request
-        .get({
+      Request[action]({
           url,
           encoding: 'utf-8',
-          method: 'GET',
+          method: method.toUpperCase(),
         }, (err, res, body) => {
           resolve({ data: JSON.parse(body) });
         })
