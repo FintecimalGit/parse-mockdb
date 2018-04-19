@@ -12,8 +12,10 @@ npm install parse-mockdb --save-dev
 ```
 
 Enhancements: 
-  To make specific test-scenarios somethimes is required to define custom createAt, updateAt or objectId, 
-  so this fork is able to handle it. just add to the object the data to save:
+  To make specific test-scenarios sometime is required to define custom createAt, updateAt or objectId, 
+  so this fork is able to handle it. 
+  
+  Just add to the object the data to save:
 
 ```
     created_at, updated_at, object_id
