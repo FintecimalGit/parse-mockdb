@@ -16,7 +16,7 @@ Enhancements:
   so this fork is able to handle it. just add to the object the data to save:
 
 ```
-    created_at, updated_at, object_id, objectId
+    created_at, updated_at, object_id
 ```
   Dates can be defined as follow:
 ```js
