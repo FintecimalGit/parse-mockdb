@@ -63,6 +63,6 @@
     }
   },
   "peerDependencies": {
-    "parse": "^1.7.0"
+    "parse": "^4.1.0"
   }
 }
